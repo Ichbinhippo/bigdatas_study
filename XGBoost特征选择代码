@@ -1,0 +1,54 @@
+利用XGBoost进行特征选择简单代码。
+基本流程如下：
+1.利用pandas读入csv格式数据。pd.read_csv()
+
+2.将类别特征数值化。
+
+3.设置XGBoost参数，设置rounds参数，rounds = int型整数。其中params举例如下：
+params = {
+    'min_child_weight': 90,
+    'eta': 0.1,
+    'colsample_bytree': 0.7,
+    'max_depth': 12,
+    'subsample': 0.7,
+    'alpha': 1,
+    'gamma': 1,
+    'silent': 1,
+    'verbose_eval': True,
+    'seed': 12
+}
+
+4.设置训练数据train_data，和类别标签labels，将其创建为xgb.DMatrix对象,举例如下：
+xgtrain = xgb.DMatrix(train_data, label=labels)
+
+5.构建xgb的训练模型
+bst = xgb.train(params, xgtrain, num_boost_round=rounds)
+
+6.找出特征属性features列表
+features = [x for x in train.columns if x not in ['id','loss']]
+
+7.定义属性函数,将其存储为xgb.fmap
+def ceate_feature_map(features):
+    outfile = open('xgb.fmap', 'w')
+    i = 0
+    for feat in features:
+        outfile.write('{0}\t{1}\tq\n'.format(i, feat))
+        i = i + 1
+    outfile.close()
+ceate_feature_map(features)
+
+8.得到属性的重要性量化的数值
+importance = bst.get_fscore(fmap='xgb.fmap')
+importance = sorted(importance.items(), key=operator.itemgetter(1))
+
+9.将feature对应的的fscore建立为pandas型数据，并将其fcore做归一化，写为新的csv文件。
+df = pd.DataFrame(importance, columns=['feature', 'fscore'])
+df['fscore'] = df['fscore'] / df['fscore'].sum()
+df.to_csv("titanic_input/feat_importance.csv", index=False)
+
+10.画出属性排序分布
+plt.figure()
+df.plot(kind='barh', x='feature', y='fscore', legend=False, figsize=(15, 25))
+plt.title('XGBoost Feature Importance')
+plt.xlabel('relative importance')
+plt.show()
