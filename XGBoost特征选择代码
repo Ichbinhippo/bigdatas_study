@@ -52,3 +52,6 @@ df.plot(kind='barh', x='feature', y='fscore', legend=False, figsize=(15, 25))
 plt.title('XGBoost Feature Importance')
 plt.xlabel('relative importance')
 plt.show()
+
+附：train数据集来源
+https://www.kaggle.com/c/allstate-claims-severity/data
